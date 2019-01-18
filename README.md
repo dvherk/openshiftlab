@@ -36,8 +36,11 @@ to perform the lab instructions.
 -   Request a free 30 days
     [evaluation](https://access.redhat.com/products/red-hat-openshift-container-platform/evaluation)
     from RedHat
-    (<https://access.redhat.com/products/red-hat-openshift-container-platform/evaluation>),
-    (https://access.redhat.com/solutions/411973)
+    (<https://access.redhat.com/products/red-hat-openshift-container-platform/evaluation>)
+    * go to (https://access.redhat.com/management)
+    * give the system time to process the trial request (upto 30 minutes)
+    * start the 'activation'
+    * create a subscription allocation
 
 -   You need to have an account on [GitHub](http://www.github.com/), If
     you don't have one create a free account (<https://github.com/>).
@@ -92,12 +95,12 @@ OpenShift offers multiple access modes including: developer CLI, admin CLI, web 
 ![](./MediaFolder/media/image3.jpg)
 
 
-CHALLENGE -1: Deploy Openshift on azure
+CHALLENGE -1: Deploy Openshift on Azure
 ======================================
 
 OpenShift, leverages multiple Azure services such as VM *extensions*, Azure disks, and *Key vaults...* to provide an Enterprise grade offering for customers who would like to containerize and manage their applications, without investing long time and hard effort configuring and integrating various tools.
 
-OpenShift offers another alternative to multiple CaaS (container as a service) solutions available on Azure, such as *Azure container service, Azure service fabric* and *Pivotal* from *CloudFoundry*...
+OpenShift offers an alternative to other CaaS (container as a service) solutions available on Azure, such as *Azure Kubernetes Service*, *Azure Container Service, Azure Service Fabric*, *Docker Enterprise* or *Pivotal* from *CloudFoundry*...
 
 ![](./MediaFolder/media/image4.png)
  
@@ -123,7 +126,7 @@ $ ssh-keygen
 $ az group create -n ossdemo -l 'West Europe'
 ```
 
-4.  Create a Key Vault and add your ***ssh private key***, created in the previous step. The name of the Key Vault should be unique as it containes a public endpoint.
+4.  Create an Azure Key Vault and add your ***ssh private key***, created in the previous step. The name of the Key Vault should be unique as it containes a public endpoint.
 
 ![](./MediaFolder/media/image9.jpg)
 
@@ -136,11 +139,10 @@ $ az keyvault create -n ossKV -g ossdemo -l 'West Europe' --enabled-for-template
 $ az keyvault secret set --vault-name ossKV -n ossSecret --file ~/.ssh/osslab_rsa
 ```
 
-The deployment of OpenShift relies on Ansible scripts that should be configured for Azure as the cloud provider. During and post-installation, OpenShift requires access to some Azure resources, like provisioning an Azure managed disk for persistence storage backend.
-When you have an application that needs to access or modify resources, you must set up an Azure Active Directory (AD) application and assign the required permissions to it. The service principal object defines the
-policy and permissions for an application's use in a specific tenant, providing the basis for a security principal to represent the application at run-time.
+The deployment of OpenShift relies on Ansible scripts that should be configured for Azure as the cloud provider. During and post-installation OpenShift requires access to Azure, for example to provisioning Azure managed disks for persistence storage backend.
+When you have an solution that needs to provision or modify resources in Azure, then you need to setup a service principal. This is effectively an Azure AD application object. This service principle is used to provide access from OpenShift to the Azure platform.
 
-5.  Create an Azure Active Directory Service Principal and choose a different password. Copy the resource group scope (id) from step number 3. The name of the Service Principal should be unique as it contians a public endpoint.
+5.  Create an Azure Active Directory Service Principal, please change the password. Copy the resource group scope (id) from step number 3. The name of the Service Principal should be unique as it contians a public endpoint.
 
 ```bash
 $ az ad sp create-for-rbac -n openshiftcloudprovider --password <CHANGE-ME-PASSWORD> --role contributor --scopes <RG-ID-COPIED-FROM-STEP3>
@@ -161,18 +163,17 @@ $ az ad sp create-for-rbac -n openshiftcloudprovider --password <CHANGE-ME-PASSW
 $ az ad sp show --id http://openshiftcloudprovider
 ```
 
-8.  Use the following Azure resource manager solutions
+8.  Use the following Azure Resource Manager solution
 [template](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMicrosoft%2Fopenshift-container-platform%2Fmaster%2Fazuredeploy.json)
 to deploy your OpenShift environment:
 <https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMicrosoft%2Fopenshift-container-platform%2Fmaster%2Fazuredeploy.json>
 
--   At this stage we will need Red Hat Network or Red Hat satellite credentials to register RHEL vms with RedHat and get access to the required software channels during the deployment. More specifically,
-we will need:
-
+-   At this stage we will need Red Hat Network or Red Hat satellite credentials to register RHEL vms with RedHat and get access to the required software channels during the deployment. More specifically, we will need:
     -   Red Hat Network/Satellite name
     -   The associated password or activation key
 
 -   PoolId provides access to the required software channels for Openshift and Cloudforms. PoolId can be listed by invoking the command 'subscription-manager list -available' from a registered RHEL system. Also can be listed if you login to [RHN](https://rhn.redhat.com/) and select the OpenShift subscription that will be used. Contact your Red Hat admin or Red Hat support if you are missing information.
+PoolId can also be retreived via (https://access.redhat.com/management/subscriptions), click the appropiate subscription and copy the Pool ID from there.
 
 -   For high availability consideration, we are deploying 3 master and infra vms and 2 worker node vms. If you want to deploy the lab with minimal cost, you can reduce the number of vms to one per each. Also, you can scale down the vm families, but preferably stick to vms with SSD disks for faster deployment.
 
